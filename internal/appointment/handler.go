@@ -103,7 +103,7 @@ func (h *Handler) listAppointments(c *gin.Context) {
 // @Router       /appointments [post]
 func (h *Handler) createAppointment(c *gin.Context) {
 	var req CreateRequest
-	dec := newStrictJSONDecoder(c)
+	dec := httputil.StrictJSONDecoder(c)
 	if err := dec.Decode(&req); err != nil {
 		httputil.WriteError(c, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return

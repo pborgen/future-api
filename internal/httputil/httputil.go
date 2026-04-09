@@ -5,6 +5,7 @@
 package httputil
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -19,6 +20,16 @@ type ErrorResponse struct {
 // WriteError writes a JSON ErrorResponse with the given status code.
 func WriteError(c *gin.Context, status int, msg string) {
 	c.JSON(status, ErrorResponse{Error: msg})
+}
+
+// StrictJSONDecoder returns a json.Decoder bound to the request body that
+// rejects unknown fields. gin's ShouldBindJSON is permissive by default; we
+// want strict parsing so typos in the payload surface as 400s instead of
+// being silently dropped.
+func StrictJSONDecoder(c *gin.Context) *json.Decoder {
+	dec := json.NewDecoder(c.Request.Body)
+	dec.DisallowUnknownFields()
+	return dec
 }
 
 // ParseTimeQuery extracts an RFC3339 timestamp from c's query string.
