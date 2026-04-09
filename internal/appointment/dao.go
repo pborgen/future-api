@@ -1,6 +1,3 @@
-// Package appointment is the data-access layer for the appointment aggregate.
-// It encapsulates the SQL for appointments and is the only place in the
-// codebase that talks to the appointments table directly.
 package appointment
 
 import (
@@ -9,30 +6,31 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	"github.com/pborgen/future-api/internal/model"
 )
 
 // ErrConflict signals that an appointment overlaps an existing one for the
 // trainer. It is raised when the unique index on (trainer_id, starts_at) is
-// violated.
+// violated. Exported so callers can errors.Is against it (the HTTP handler
+// translates it into a 409).
 var ErrConflict = errors.New("appointment conflicts with an existing booking")
 
-// DAO persists appointments in Postgres.
-type DAO struct {
+// dao persists appointments in Postgres. It is unexported because Service is
+// the only consumer; nothing outside this package should reach the database
+// directly.
+type dao struct {
 	pool *pgxpool.Pool
 }
 
-// NewDAO wraps a pgx pool.
-func NewDAO(pool *pgxpool.Pool) *DAO {
-	return &DAO{pool: pool}
+func newDAO(pool *pgxpool.Pool) *dao {
+	return &dao{pool: pool}
 }
 
-// Create inserts an appointment, returning ErrConflict if the trainer is
+// create inserts an appointment, returning ErrConflict if the trainer is
 // already booked at that exact slot. The DB-level unique index is the source
 // of truth for conflict detection.
-func (d *DAO) Create(ctx context.Context, a *model.Appointment) error {
+func (d *dao) create(ctx context.Context, a *Appointment) error {
 	const q = `
 		INSERT INTO appointments (trainer_id, user_id, starts_at, ends_at)
 		VALUES ($1, $2, $3, $4)
@@ -50,8 +48,8 @@ func (d *DAO) Create(ctx context.Context, a *model.Appointment) error {
 	return nil
 }
 
-// ListByTrainer returns every appointment for a trainer ordered by start time.
-func (d *DAO) ListByTrainer(ctx context.Context, trainerID int64) ([]model.Appointment, error) {
+// listByTrainer returns every appointment for a trainer ordered by start time.
+func (d *dao) listByTrainer(ctx context.Context, trainerID int64) ([]Appointment, error) {
 	const q = `
 		SELECT id, trainer_id, user_id, starts_at, ends_at
 		FROM appointments
@@ -63,12 +61,12 @@ func (d *DAO) ListByTrainer(ctx context.Context, trainerID int64) ([]model.Appoi
 		return nil, err
 	}
 	defer rows.Close()
-	return scanAppointments(rows)
+	return scanAll(rows)
 }
 
-// ListByTrainerInRange returns appointments for a trainer that intersect
+// listByTrainerInRange returns appointments for a trainer that intersect
 // [startsAt, endsAt). Used to compute availability.
-func (d *DAO) ListByTrainerInRange(ctx context.Context, trainerID int64, startsAt, endsAt time.Time) ([]model.Appointment, error) {
+func (d *dao) listByTrainerInRange(ctx context.Context, trainerID int64, startsAt, endsAt time.Time) ([]Appointment, error) {
 	const q = `
 		SELECT id, trainer_id, user_id, starts_at, ends_at
 		FROM appointments
@@ -82,13 +80,13 @@ func (d *DAO) ListByTrainerInRange(ctx context.Context, trainerID int64, startsA
 		return nil, err
 	}
 	defer rows.Close()
-	return scanAppointments(rows)
+	return scanAll(rows)
 }
 
-func scanAppointments(rows pgx.Rows) ([]model.Appointment, error) {
-	out := make([]model.Appointment, 0)
+func scanAll(rows pgx.Rows) ([]Appointment, error) {
+	out := make([]Appointment, 0)
 	for rows.Next() {
-		var a model.Appointment
+		var a Appointment
 		if err := rows.Scan(&a.ID, &a.TrainerID, &a.UserID, &a.StartsAt, &a.EndsAt); err != nil {
 			return nil, err
 		}
@@ -98,4 +96,13 @@ func scanAppointments(rows pgx.Rows) ([]model.Appointment, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// isUniqueViolation reports whether err is a Postgres unique-constraint failure.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }

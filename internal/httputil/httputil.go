@@ -1,7 +1,7 @@
 // Package httputil contains transport-layer primitives shared across every
-// gin handler package: the JSON error envelope and request parsing helpers.
-// Living in its own package keeps per-aggregate handler packages thin and
-// avoids exposing two types named ErrorResponse to swag.
+// gin handler in the project: the JSON error envelope and request parsing
+// helpers. Lives at the project root so any aggregate package can import it
+// without depending on another aggregate.
 package httputil
 
 import (

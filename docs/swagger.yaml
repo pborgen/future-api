@@ -1,12 +1,12 @@
 basePath: /
 definitions:
-  github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse:
+  github_com_pborgen_future-api_internal_httputil.ErrorResponse:
     properties:
       error:
         example: invalid trainer_id
         type: string
     type: object
-  github_com_pborgen_future-api_internal_model.Appointment:
+  internal_appointment.Appointment:
     properties:
       ends_at:
         example: "2026-04-06T09:30:00-07:00"
@@ -24,7 +24,7 @@ definitions:
         example: 2
         type: integer
     type: object
-  github_com_pborgen_future-api_internal_model.CreateAppointmentRequest:
+  internal_appointment.CreateRequest:
     properties:
       ends_at:
         example: "2026-04-06T09:30:00-07:00"
@@ -39,7 +39,7 @@ definitions:
         example: 2
         type: integer
     type: object
-  github_com_pborgen_future-api_internal_model.Slot:
+  internal_appointment.Slot:
     properties:
       ends_at:
         example: "2026-04-06T09:30:00-07:00"
@@ -65,33 +65,33 @@ paths:
       parameters:
       - description: Appointment to create
         in: body
-        name: appointment
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_pborgen_future-api_internal_model.CreateAppointmentRequest'
+          $ref: '#/definitions/internal_appointment.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_model.Appointment'
+            $ref: '#/definitions/internal_appointment.Appointment'
         "400":
           description: malformed request
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
         "409":
           description: trainer already booked at that time
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
         "422":
           description: outside business hours, wrong duration, or not on :00/:30
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
       summary: Book a new appointment
       tags:
       - appointments
@@ -112,16 +112,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_pborgen_future-api_internal_model.Appointment'
+              $ref: '#/definitions/internal_appointment.Appointment'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
       summary: List a trainer's scheduled appointments
       tags:
       - appointments
@@ -155,16 +155,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_pborgen_future-api_internal_model.Slot'
+              $ref: '#/definitions/internal_appointment.Slot'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse'
+            $ref: '#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse'
       summary: List available appointment slots for a trainer
       tags:
       - appointments

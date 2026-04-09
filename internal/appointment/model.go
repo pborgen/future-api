@@ -1,7 +1,8 @@
-// Package model holds the shared domain types passed between the dao,
-// service, and handler layers. It has no dependencies on other internal
-// packages so any layer can import it freely.
-package model
+// Package appointment is the appointment aggregate. It contains the domain
+// types, data access, business rules, and HTTP transport for everything
+// related to scheduling 30-minute trainer appointments. The data-access type
+// is unexported so the only entry point into persistence is via Service.
+package appointment
 
 import "time"
 
@@ -20,8 +21,8 @@ type Slot struct {
 	EndsAt   time.Time `json:"ends_at"   example:"2026-04-06T09:30:00-07:00"`
 }
 
-// CreateAppointmentRequest is the JSON payload for booking an appointment.
-type CreateAppointmentRequest struct {
+// CreateRequest is the JSON payload for booking an appointment.
+type CreateRequest struct {
 	TrainerID int64     `json:"trainer_id" example:"1"`
 	UserID    int64     `json:"user_id"    example:"2"`
 	StartsAt  time.Time `json:"starts_at"  example:"2026-04-06T09:00:00-07:00"`

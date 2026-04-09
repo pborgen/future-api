@@ -1,13 +1,8 @@
-// Package appointment is the appointment business-logic service. It owns
-// the rules for business hours, slot generation, and validation, and
-// composes the appointment DAO for persistence.
 package appointment
 
 import (
 	"errors"
 	"time"
-
-	"github.com/pborgen/future-api/internal/model"
 )
 
 // SlotDuration is the fixed length of every appointment.
@@ -64,9 +59,9 @@ func IsValidSlotStart(t time.Time) bool {
 	return true
 }
 
-// ValidateAppointment returns nil if the (startsAt, endsAt) pair represents a
-// well-formed 30-minute appointment inside business hours.
-func ValidateAppointment(startsAt, endsAt time.Time) error {
+// Validate returns nil if the (startsAt, endsAt) pair represents a well-formed
+// 30-minute appointment inside business hours.
+func Validate(startsAt, endsAt time.Time) error {
 	if !startsAt.Before(endsAt) {
 		return ErrInvalidWindow
 	}
@@ -88,7 +83,7 @@ func ValidateAppointment(startsAt, endsAt time.Time) error {
 
 // GenerateCandidateSlots returns every valid 30-minute slot whose start time
 // falls within [startsAt, endsAt). Times are returned in Pacific time.
-func GenerateCandidateSlots(startsAt, endsAt time.Time) []model.Slot {
+func GenerateCandidateSlots(startsAt, endsAt time.Time) []Slot {
 	if !startsAt.Before(endsAt) {
 		return nil
 	}
@@ -96,10 +91,10 @@ func GenerateCandidateSlots(startsAt, endsAt time.Time) []model.Slot {
 	cur := alignUpToHalfHour(startsAt.In(loc))
 	end := endsAt.In(loc)
 
-	slots := make([]model.Slot, 0)
+	slots := make([]Slot, 0)
 	for cur.Before(end) {
 		if IsValidSlotStart(cur) {
-			slots = append(slots, model.Slot{
+			slots = append(slots, Slot{
 				StartsAt: cur,
 				EndsAt:   cur.Add(SlotDuration),
 			})
@@ -126,7 +121,7 @@ func alignUpToHalfHour(t time.Time) time.Time {
 
 // FilterAvailable removes any candidate slot that overlaps an existing
 // appointment. Existing appointments are assumed to belong to the same trainer.
-func FilterAvailable(candidates []model.Slot, existing []model.Appointment) []model.Slot {
+func FilterAvailable(candidates []Slot, existing []Appointment) []Slot {
 	if len(existing) == 0 {
 		return candidates
 	}
@@ -134,7 +129,7 @@ func FilterAvailable(candidates []model.Slot, existing []model.Appointment) []mo
 	for _, a := range existing {
 		taken[a.StartsAt.UTC()] = struct{}{}
 	}
-	out := make([]model.Slot, 0, len(candidates))
+	out := make([]Slot, 0, len(candidates))
 	for _, s := range candidates {
 		if _, found := taken[s.StartsAt.UTC()]; found {
 			continue

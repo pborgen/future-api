@@ -31,11 +31,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Appointment to create",
-                        "name": "appointment",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_model.CreateAppointmentRequest"
+                            "$ref": "#/definitions/internal_appointment.CreateRequest"
                         }
                     }
                 ],
@@ -43,31 +43,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_model.Appointment"
+                            "$ref": "#/definitions/internal_appointment.Appointment"
                         }
                     },
                     "400": {
                         "description": "malformed request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "trainer already booked at that time",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "outside business hours, wrong duration, or not on :00/:30",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     }
                 }
@@ -98,20 +98,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_pborgen_future-api_internal_model.Appointment"
+                                "$ref": "#/definitions/internal_appointment.Appointment"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     }
                 }
@@ -158,20 +158,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_pborgen_future-api_internal_model.Slot"
+                                "$ref": "#/definitions/internal_appointment.Slot"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse"
+                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
                         }
                     }
                 }
@@ -179,7 +179,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_pborgen_future-api_internal_handler_httputil.ErrorResponse": {
+        "github_com_pborgen_future-api_internal_httputil.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -188,7 +188,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pborgen_future-api_internal_model.Appointment": {
+        "internal_appointment.Appointment": {
             "type": "object",
             "properties": {
                 "ends_at": {
@@ -213,7 +213,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pborgen_future-api_internal_model.CreateAppointmentRequest": {
+        "internal_appointment.CreateRequest": {
             "type": "object",
             "properties": {
                 "ends_at": {
@@ -234,7 +234,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_pborgen_future-api_internal_model.Slot": {
+        "internal_appointment.Slot": {
             "type": "object",
             "properties": {
                 "ends_at": {

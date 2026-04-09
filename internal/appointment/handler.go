@@ -1,6 +1,3 @@
-// Package appointment is the HTTP transport layer for the appointment
-// aggregate. Handlers translate gin requests into service calls and service
-// errors into HTTP status codes. They never touch the database directly.
 package appointment
 
 import (
@@ -10,23 +7,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	appointmentdao "github.com/pborgen/future-api/internal/dao/appointment"
-	"github.com/pborgen/future-api/internal/handler/httputil"
-	"github.com/pborgen/future-api/internal/model"
-	appointmentsvc "github.com/pborgen/future-api/internal/service/appointment"
+	"github.com/pborgen/future-api/internal/httputil"
 )
 
 // Handler exposes the appointment HTTP endpoints.
 type Handler struct {
-	svc *appointmentsvc.Service
+	svc *Service
 }
 
 // NewHandler constructs the handler.
-func NewHandler(svc *appointmentsvc.Service) *Handler {
+func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
-// Routes registers the appointment endpoints onto a gin router group.
+// Routes registers the appointment endpoints onto a gin router.
 func (h *Handler) Routes(r gin.IRouter) {
 	r.GET("/trainers/:trainer_id/availability", h.getAvailability)
 	r.GET("/trainers/:trainer_id/appointments", h.listAppointments)
@@ -41,7 +35,7 @@ func (h *Handler) Routes(r gin.IRouter) {
 // @Param        trainer_id  path      int     true  "Trainer ID"
 // @Param        starts_at   query     string  true  "Window start (RFC3339)"  example(2026-04-06T08:00:00-07:00)
 // @Param        ends_at     query     string  true  "Window end (RFC3339)"    example(2026-04-06T17:00:00-07:00)
-// @Success      200  {array}   model.Slot
+// @Success      200  {array}   appointment.Slot
 // @Failure      400  {object}  httputil.ErrorResponse
 // @Failure      500  {object}  httputil.ErrorResponse
 // @Router       /trainers/{trainer_id}/availability [get]
@@ -76,7 +70,7 @@ func (h *Handler) getAvailability(c *gin.Context) {
 // @Tags         appointments
 // @Produce      json
 // @Param        trainer_id  path      int  true  "Trainer ID"
-// @Success      200  {array}   model.Appointment
+// @Success      200  {array}   appointment.Appointment
 // @Failure      400  {object}  httputil.ErrorResponse
 // @Failure      500  {object}  httputil.ErrorResponse
 // @Router       /trainers/{trainer_id}/appointments [get]
@@ -100,17 +94,15 @@ func (h *Handler) listAppointments(c *gin.Context) {
 // @Tags         appointments
 // @Accept       json
 // @Produce      json
-// @Param        appointment  body      model.CreateAppointmentRequest  true  "Appointment to create"
-// @Success      201  {object}  model.Appointment
+// @Param        request  body      appointment.CreateRequest  true  "Appointment to create"
+// @Success      201  {object}  appointment.Appointment
 // @Failure      400  {object}  httputil.ErrorResponse  "malformed request"
 // @Failure      409  {object}  httputil.ErrorResponse  "trainer already booked at that time"
 // @Failure      422  {object}  httputil.ErrorResponse  "outside business hours, wrong duration, or not on :00/:30"
 // @Failure      500  {object}  httputil.ErrorResponse
 // @Router       /appointments [post]
 func (h *Handler) createAppointment(c *gin.Context) {
-	var req model.CreateAppointmentRequest
-	// gin's ShouldBindJSON uses the std-lib decoder under the hood; we want
-	// strict parsing so unknown fields are rejected.
+	var req CreateRequest
 	dec := newStrictJSONDecoder(c)
 	if err := dec.Decode(&req); err != nil {
 		httputil.WriteError(c, http.StatusBadRequest, "invalid JSON: "+err.Error())
@@ -124,12 +116,12 @@ func (h *Handler) createAppointment(c *gin.Context) {
 	created, err := h.svc.Create(c.Request.Context(), req)
 	if err != nil {
 		switch {
-		case errors.Is(err, appointmentdao.ErrConflict):
+		case errors.Is(err, ErrConflict):
 			httputil.WriteError(c, http.StatusConflict, err.Error())
-		case errors.Is(err, appointmentsvc.ErrInvalidWindow),
-			errors.Is(err, appointmentsvc.ErrNotHalfHour),
-			errors.Is(err, appointmentsvc.ErrWrongDuration),
-			errors.Is(err, appointmentsvc.ErrOutsideBusinessHours):
+		case errors.Is(err, ErrInvalidWindow),
+			errors.Is(err, ErrNotHalfHour),
+			errors.Is(err, ErrWrongDuration),
+			errors.Is(err, ErrOutsideBusinessHours):
 			httputil.WriteError(c, http.StatusUnprocessableEntity, err.Error())
 		default:
 			httputil.WriteError(c, http.StatusInternalServerError, "failed to create appointment")

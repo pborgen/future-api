@@ -3,8 +3,6 @@ package appointment
 import (
 	"testing"
 	"time"
-
-	"github.com/pborgen/future-api/internal/model"
 )
 
 func mustTime(t *testing.T, s string) time.Time {
@@ -44,9 +42,9 @@ func TestIsValidSlotStart(t *testing.T) {
 	}
 }
 
-func TestValidateAppointment(t *testing.T) {
+func TestValidate(t *testing.T) {
 	good := mustTime(t, "2026-04-06T09:00:00-07:00")
-	if err := ValidateAppointment(good, good.Add(30*time.Minute)); err != nil {
+	if err := Validate(good, good.Add(30*time.Minute)); err != nil {
 		t.Fatalf("expected valid: %v", err)
 	}
 
@@ -89,7 +87,7 @@ func TestValidateAppointment(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateAppointment(mustTime(t, tc.start), mustTime(t, tc.end))
+			err := Validate(mustTime(t, tc.start), mustTime(t, tc.end))
 			if err != tc.wantErr {
 				t.Fatalf("got %v, want %v", err, tc.wantErr)
 			}
@@ -152,7 +150,7 @@ func TestFilterAvailable(t *testing.T) {
 	if len(candidates) != 4 {
 		t.Fatalf("expected 4 candidates, got %d", len(candidates))
 	}
-	booked := []model.Appointment{
+	booked := []Appointment{
 		{
 			TrainerID: 1,
 			UserID:    99,
@@ -173,13 +171,13 @@ func TestFilterAvailable(t *testing.T) {
 
 func TestFilterAvailable_BookingInDifferentTimezoneStillMatches(t *testing.T) {
 	// Same instant, expressed once in Pacific and once in UTC.
-	candidates := []model.Slot{
+	candidates := []Slot{
 		{
 			StartsAt: mustTime(t, "2026-04-06T09:00:00-07:00"),
 			EndsAt:   mustTime(t, "2026-04-06T09:30:00-07:00"),
 		},
 	}
-	booked := []model.Appointment{
+	booked := []Appointment{
 		{
 			StartsAt: mustTime(t, "2026-04-06T16:00:00Z"),
 			EndsAt:   mustTime(t, "2026-04-06T16:30:00Z"),

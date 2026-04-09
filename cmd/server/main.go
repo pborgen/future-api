@@ -20,11 +20,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/pborgen/future-api/docs" // generated swagger spec
+	"github.com/pborgen/future-api/internal/appointment"
 	"github.com/pborgen/future-api/internal/config"
-	appointmentdao "github.com/pborgen/future-api/internal/dao/appointment"
 	"github.com/pborgen/future-api/internal/db"
-	appointmenthttp "github.com/pborgen/future-api/internal/handler/appointment"
-	appointmentsvc "github.com/pborgen/future-api/internal/service/appointment"
 )
 
 func main() {
@@ -43,15 +41,14 @@ func main() {
 		log.Fatalf("migrations: %v", err)
 	}
 
-	apptDAO := appointmentdao.NewDAO(pool)
-	if n, err := appointmentsvc.SeedFromFile(ctx, apptDAO, cfg.SeedFile); err != nil {
+	apptSvc := appointment.NewService(pool)
+	if n, err := apptSvc.SeedFromFile(ctx, cfg.SeedFile); err != nil {
 		log.Printf("warning: seed failed: %v", err)
 	} else if n > 0 {
 		log.Printf("seeded %d appointments from %s", n, cfg.SeedFile)
 	}
 
-	apptSvc := appointmentsvc.NewService(apptDAO)
-	apptHandler := appointmenthttp.NewHandler(apptSvc)
+	apptHandler := appointment.NewHandler(apptSvc)
 
 	// Honor GIN_MODE; default to release so prod logs aren't littered with
 	// debug output. Override locally with `GIN_MODE=debug`.
@@ -63,12 +60,19 @@ func main() {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
-	r.GET("/healthz", func(c *gin.Context) {
+	r.GET("/health", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
 	})
 
 	// Swagger UI: /swagger/index.html (raw spec at /swagger/doc.json).
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	swaggerHandler := ginSwagger.WrapHandler(swaggerFiles.Handler)
+	r.GET("/swagger/*any", func(c *gin.Context) {
+		if p := c.Param("any"); p == "" || p == "/" {
+			c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+			return
+		}
+		swaggerHandler(c)
+	})
 
 	apptHandler.Routes(r)
 
