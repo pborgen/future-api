@@ -19,7 +19,6 @@ func main() {
 		PropNamingStrategy: "camelcase",
 		OutputDir:          "./docs",
 		OutputTypes:        []string{"go", "json", "yaml"},
-		ParseDependency:    1,
 		ParseInternal:      true,
 		ParseDepth:         100,
 		LeftTemplateDelim:  "{{",

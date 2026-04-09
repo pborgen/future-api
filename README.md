@@ -14,16 +14,19 @@ to the spec in [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ```
 cmd/server/             # main entrypoint + Swagger general info
-internal/model/         # domain types (no internal deps)
-internal/dao/           # data access — only layer that touches Postgres
-internal/service/       # business rules: slot logic, validation, seeding
-internal/handler/       # HTTP transport + Swagger annotations
+internal/appointment/   # feature package: model, dao, service, handler, slot logic
+internal/config/        # env-driven runtime configuration
 internal/db/            # pgx pool helper + migration runner
+internal/httputil/      # shared HTTP helpers (error envelope, strict JSON, query parsing)
 migrations/             # SQL schema
 docs/                   # generated OpenAPI spec (do not edit by hand)
 scripts/gendocs/        # in-process Swagger generator
 appointments.json       # seed data (auto-loaded on boot, idempotent)
 ```
+
+The appointment feature is intentionally flat: `model.go`, `dao.go`,
+`service.go`, `handler.go`, and `slots.go` all live side-by-side in one
+package rather than being split across layer-named directories.
 
 ## Run with Docker (recommended)
 
@@ -44,14 +47,18 @@ go run ./cmd/server
 
 Environment variables:
 
-| Variable        | Default                                                            |
-| --------------- | ------------------------------------------------------------------ |
-| `DATABASE_URL`  | `postgres://future:future@localhost:5432/future?sslmode=disable`   |
-| `HTTP_ADDR`     | `:8080`                                                            |
-| `MIGRATIONS_DIR`| `migrations`                                                       |
-| `SEED_FILE`     | `appointments.json`                                                |
+| Variable          | Default                                                          |
+| ----------------- | ---------------------------------------------------------------- |
+| `DATABASE_URL`    | `postgres://future:future@localhost:5432/future?sslmode=disable` |
+| `HTTP_ADDR`       | `:8080`                                                          |
+| `MIGRATIONS_DIR`  | `migrations`                                                     |
+| `SEED_FILE`       | `appointments.json`                                              |
+| `GIN_MODE`        | release (set to `debug` locally for verbose logs)                |
+| `TEST_DATABASE_URL` | unset — required only to run integration tests                 |
 
 ## Tests
+
+Unit tests (no database required):
 
 ```bash
 go test ./...
@@ -60,12 +67,26 @@ go test ./...
 The slot/business-hours logic is unit-tested across DST-relevant timezones,
 weekend boundaries, and the 5pm Pacific cutoff.
 
+Integration tests exercise the full HTTP → service → DAO → Postgres stack
+and are skipped unless `TEST_DATABASE_URL` is set. Point it at a reachable
+Postgres (easiest: `docker compose up postgres` in another terminal):
+
+```bash
+export TEST_DATABASE_URL="postgres://future:future@localhost:5432/future?sslmode=disable"
+go test ./internal/appointment/...
+```
+
+Each integration test truncates the `appointments` table so cases are
+independent.
+
 ## API documentation (Swagger / OpenAPI)
 
 While the server is running, the interactive Swagger UI is at:
 
-- **<http://localhost:8080/swagger/index.html>** — interactive UI
+- **<http://localhost:8080/swagger>** — interactive UI (redirects to `index.html`)
 - **<http://localhost:8080/swagger/doc.json>** — raw OpenAPI 2.0 spec
+
+There is also a `GET /health` endpoint that returns `ok` for liveness checks.
 
 The committed spec lives in [docs/](docs/). Regenerate it after changing any
 handler annotation, model, or general API info comment:

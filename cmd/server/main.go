@@ -23,13 +23,14 @@ import (
 	"github.com/pborgen/future-api/internal/appointment"
 	"github.com/pborgen/future-api/internal/config"
 	"github.com/pborgen/future-api/internal/db"
+	"github.com/pborgen/future-api/internal/httputil"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	cfg := config.Load()
+	cfg := config.Get()
 
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -59,6 +60,12 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+
+	// Per-IP rate limiting. Lenient defaults for now (100 rps, burst 200) —
+	// tighten once we have real usage data.
+	rl := httputil.NewRateLimiter(httputil.DefaultRateLimit())
+	defer rl.Close()
+	r.Use(rl.Middleware())
 
 	r.GET("/health", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")

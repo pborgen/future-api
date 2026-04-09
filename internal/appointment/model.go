@@ -13,7 +13,7 @@ type Appointment struct {
 	UserID    int64     `json:"user_id"    example:"2"`
 	StartsAt  time.Time `json:"starts_at"  example:"2026-04-06T09:00:00-07:00"`
 	EndsAt    time.Time `json:"ends_at"    example:"2026-04-06T09:30:00-07:00"`
-}
+} //@name Appointment
 
 // Slot is an available 30-minute window.
 type Slot struct {

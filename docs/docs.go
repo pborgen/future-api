@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_appointment.CreateRequest"
+                            "$ref": "#/definitions/appointment.CreateRequest"
                         }
                     }
                 ],
@@ -43,31 +43,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_appointment.Appointment"
+                            "$ref": "#/definitions/appointment.Appointment"
                         }
                     },
                     "400": {
                         "description": "malformed request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "trainer already booked at that time",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "outside business hours, wrong duration, or not on :00/:30",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     }
                 }
@@ -98,20 +98,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_appointment.Appointment"
+                                "$ref": "#/definitions/appointment.Appointment"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     }
                 }
@@ -158,20 +158,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_appointment.Slot"
+                                "$ref": "#/definitions/appointment.Slot"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_pborgen_future-api_internal_httputil.ErrorResponse"
+                            "$ref": "#/definitions/httputil.ErrorResponse"
                         }
                     }
                 }
@@ -179,16 +179,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_pborgen_future-api_internal_httputil.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "invalid trainer_id"
-                }
-            }
-        },
-        "internal_appointment.Appointment": {
+        "appointment.Appointment": {
             "type": "object",
             "properties": {
                 "ends_at": {
@@ -213,7 +204,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_appointment.CreateRequest": {
+        "appointment.CreateRequest": {
             "type": "object",
             "properties": {
                 "ends_at": {
@@ -234,7 +225,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_appointment.Slot": {
+        "appointment.Slot": {
             "type": "object",
             "properties": {
                 "ends_at": {
@@ -244,6 +235,15 @@ const docTemplate = `{
                 "starts_at": {
                     "type": "string",
                     "example": "2026-04-06T09:00:00-07:00"
+                }
+            }
+        },
+        "httputil.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "invalid trainer_id"
                 }
             }
         }
